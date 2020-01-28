@@ -1,48 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import axios from 'axios';
-import api from '../utils/axiosAuth'
+import S from 'styled-components';
+import LoginForm from './LoginForm';
 
-const Login = () => {
+const Login = props => {
   // make a post request to retrieve a token from the api
   // when you have handled the token, navigate to the BubblePage route
-    const [error, setError] = useState()
-    const [data, setData] = useState({
-        username: "",
-        password: "",
+  const [userInformation, setUserInformation] = useState({
+    username: '',
+    password: '',
+})
+  const handleChange = (event) => setUserInformation({...userInformation, [event.target.name]: event.target.value});
+  const {username, password} = userInformation;
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    axios.post('http://localhost:5000/api/login', {username, password})
+    .then( (response) => {
+      console.log(response.data);
+        localStorage.setItem('token', response.data.payload);
+        props.history.push('/bubbles');
     })
+    .catch( error =>  {
+        console.log(error);
 
-    const handleChange = (event) => {
-        setData({
-            ...data,
-            [event.target.name]: event.target.value,
-        })
-    }
-
-    const handleSubmit = (event) => {
-        event.preventDefault()
-
-        api()
-            .post("api/login", data)
-            .then(result => {
-                console.log(result.data)
-                localStorage.setItem("token", result.data.payload)
-                console.log(localStorage)
-            })
-            .catch(error => {
-                setError(error.response.data)
-            })
+    });
     }
 
 
   return (
     <>
-        <form onSubmit={handleSubmit}>
-            {error && <div className="error">{error}</div>}
-            <input type="text" name="username" placeholder="Username" value={data.username} onChange={handleChange}/>
-            <input type="password" name="password" placeholder="Password" value={data.password} onChange={handleChange}/>
-            <button type="submit">Sign In</button>
-        </form>
+ <LoginForm handleChange={handleChange} handleSubmit={handleSubmit} userInformation={userInformation} setUserInformation={setUserInformation}/>
+    
     </>
   );
 };
